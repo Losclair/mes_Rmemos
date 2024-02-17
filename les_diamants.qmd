@@ -1,0 +1,43 @@
+---
+title: "les_diamants"
+format: html
+editor: visual
+---
+# **Etudions les diamants**
+```{r}
+library("tidyverse")
+```
+
+## Les carats
+
+```{r}
+ggplot(diamonds, aes(x=carat)) +
+  geom_histogram(binwidth = 0.5)
+```
+### Quand est-il des diamants les plus petits ?
+```{r}
+smaller <- diamonds |>
+  filter(carat < 3)
+ggplot(smaller, aes(x = carat)) +
+  geom_histogram(binwidth = 0.01)
+```
+On remarque tout de suite des piques nets, qui s'effondrent progressivement. Cela évoque une volonté de fabriquer des diamants dans des carats définis, avec des ratés mais qui penchent sur une tendance à les faire légèrement plus lourd que prévu plutôt que plus léger.
+```{r}
+ggplot(smaller, aes(x = y)) +
+  geom_histogram(binwidth = 0.5)
+```
+On le remarque à peine, mais il y a un trait à zéro ? Si y est équivalent à count, quelle est cette valeur. Peut-on la voir de plus près ?
+```{r}
+ggplot(smaller, aes(x = y)) +
+  geom_histogram(binwidth = 0.5) +
+  coord_cartesian(ylim = c(0, 50))
+```
+De mieux en mieux, i lapparaît d'autres barres entre 35 et 40 et un peu avant 60...
+```{r}
+unusual <- diamonds |> 
+  filter(y < 3 | y > 20) |> 
+  select(price, x, y, z) |>
+  arrange(y)
+unusual
+```
+Des dimensions de 0 sont forcement fausses. Des dimensions de plus de 31 et 58 avec des prix si faibles sont probablement incorrectes.

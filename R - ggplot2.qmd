@@ -1,0 +1,909 @@
+---
+title: "ggplot2"
+author: "Losclair57"
+format: html
+editor: visual
+---
+
+# **GGPLOT2**
+
+Source : https://r4ds.had.co.nz/data-visualisation.html \[https://r4ds.had.co.nz/data-visualisation.html\]
+
+## Présentation de la commande
+
+La réalisation de graphiques est en générale effectuée via la commande ggplot de la librairie tidyverse.
+
+```{r}
+library(tidyverse)
+library(lvplot)
+```
+
+La structure de base de la commande est : ggplot(data = dataframe) + geom\_..(aes(x = , y = ))
+
+La librairie tidyverse intègre plusieurs jeux de données dont `mpg` qui contient des observations recueillies par l'Agence américaine de protection de l'environnement sur 38 modèles de voitures. Nous allons commencer par utiliser ce dataframe de 234 lignes et 11 colonnes pour commencer à nous entrainer sur les visualisations de données.
+
+## Présentation des données de **mpg**
+
+-   manufacturer : marque du constructeur automobile\
+-   model : nom du modèle de véhicule\
+-   displ : taille du moteur en litres\
+-   year : année de conception\
+-   cyl : Cylindrée\
+-   trans : type de boite de transmission (manuelle/automatique)\
+-   drv : type de transmission (propulsion, traction, 4 roues motrices)\
+-   cty : consommation en ville (en miles par gallon)\
+-   hwy : consommation sur autoroute (en miles par gallon)\
+-   fl : type de motorisation\
+-   class : "type" de véhicule
+
+## Première analyse
+
+Nous allons analyser la relation entre la taille du moteur d'un véhicule et sa consommation moyenne sur autoroute. Pour mémoire, la taille du moteur est la colonne `displ`et la cosommation moyenne sur autoroute `hwy`.
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy))
+```
+
+Nous pouvons facilement conclure que plus la taille du moteur est importante, plus l'autonomie du véhicule est réduite. Nous verrons peut-être plus tard quels sont les 2 véhicules de moins de 2 litres qui ont le plus d'autonomie et quel est le "monstre de 7 litres qui s'en tire pas si mal, et enfin celui qui a la plus petite autonomie du panel. Mais pour l'instant, concentrons nous sur les visualisations de données.\
+
+## Premières explications
+
+`ggplot(data = dataframe)` n'affiche rien mais prépare le système de coordonées en fonction du contenu du dataframe. J'ajoute que les data doivent **obligatoirement** être un dataframe. `ggplot()` ne semble pas fonctionner avec des matrices ou des vecteurs. `geom_point(mapping = )` est un calque qui en fonction de son nom (geom_point, geom_line, geom_hist) affiche un type défini de visualisation.\
+Le mapping se fait avec `aes()` qui détermine quelles données sont à placer en x et en y, et qui positionne ses données dans le graphique. Dans aes, il exsite plusieurs collections de mappage.\
+En résumé, ggplot s'utilise selon le format générique :\
+`ggplot(data = <DATA>) + <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>))`\
+Les éléments entre crochets sont ceux à préciser en fonction des données analysées et de la visualisation voulue.\
+
+### Petis exercices
+
+Visualiser le rapport entre la cylindrée et la consommation sur autoroute.
+
+```{r}
+ggplot(data = mpg) + geom_point(aes(x = cyl, y = hwy))
+```
+
+De prime abord, je remarque que 2 modèles de voitures de 6 cylindres ont une consommation quasi-identique à 2 modèles en 5 chevaux... donc autant rouler avec les 6 chevaux qui ont plus de puissance ;-)\
+Et si nous essayons de comparer class versus drv ?
+
+```{r}
+ggplot(data = mpg) + geom_point(aes(x = class, y = drv))
+```
+
+Cela n'apporte qu'une vue rapide du type de transmission existant ou non en fonction du type de véhicule, mais c'est toujours ça.
+
+## Différencier les calques, l'aesthetique
+
+Pour mieux visualiser la nature et les caractéristiques des différentes données, l'aesthétique permet de modifier leur taille, forme et couleur.
+
+### La couleur
+
+Paramète color (ou colour) dans `aes()`.
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, color = class))
+```
+
+### La taille
+
+Paramètre size de `aes()`.
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, size = class))
+```
+
+### La transparence
+
+Paramètre alpha de `aes()`.
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, alpha = class))
+```
+
+### La forme
+
+Paramètre shape de `aes()`.
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, shape = class))
+```
+
+**ATTENTION** ggplot n'affiche que 6 formes maximums pour le même calque !!
+
+### Tout en bleu !
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, color = "blue"))
+
+```
+
+??? *What the fuck !*
+
+On recommence avec une variante. Je pense qu'on peut en conclure que aes gère en automatique et que de sortir la "mise en page" de aes permet un control plus fin.
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy), color = "blue")
+
+```
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy), shape = 11)
+
+```
+
+Par contre de sortir les paramètres d'aes fait que cela s'applique uniformément à tout le calque... NB: il y a 22 formes au total dans shape, numérotées de 1 à 22 (forcement).\
+Il semble qu'il soit possibe de forcer la couleur (color) du trait de la forme et celle du remplissage (fill).
+
+```{r}
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy, size = class, shape = class, color = class))
+
+```
+
+Quel beau bordel, aes contient un paramètre stroke, utilisons le sur des cercles bleus.
+
+**SUPPRIMER** *(Pas réussi)* -\> **Si finalement, il faut juste impérativement que le shape soir spécifié et qu'il s'agisse d'un shape avec bordure !**\
+Du coup, ci-dessous mon test et après je re-essaye en bleu, et avec des carrés pour le fun.
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(stroke = 2, color = "green", fill = "white", shape = 21)
+```
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(stroke = 2, size = 5, color = "black", fill = "blue", shape = 22)
+```
+
+## Essayons le format conditionnel :
+
+```{r}
+ggplot(data = mpg) + geom_point(aes(x = displ, y = hwy, color = displ < 5))
+```
+
+## Multicast (*= multi-graphes*)
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_wrap(~ class, nrow = 2)
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_grid(drv ~ cyl)
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_grid(. ~ cyl)
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) + 
+  facet_wrap(~ cty, nrow = 2)
+```
+
+## Le tracé en ligne
+
+Reprenons les mêmes valeurs/données et voyons le rendu sous forme de tracé linéaire avec (`geom_smooth`).
+
+```{r}
+ggplot(data = mpg) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+```
+
+```{r}
+ggplot(data = mpg) + 
+  geom_smooth(mapping = aes(x = displ, y = hwy, linetype = drv))
+```
+
+# GAMBLING
+
+```{r}
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+              
+ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy, group = drv))
+    
+ggplot(data = mpg) +
+  geom_smooth(
+    mapping = aes(x = displ, y = hwy, color = drv),
+    show.legend = TRUE
+  )
+```
+
+## Plusieurs tracé dans une même visualisation
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+```
+
+Ou la même chose en plus compact avec la possibilité de changer les x ou y en une seule fois !
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point() + 
+  geom_smooth()
+```
+
+On peut faire des paramètres globaux, et des paramètres individualisé par couche. Par exemple :
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth(color = "green")
+```
+
+Vous pouvez utiliser la même idée pour spécifier des valeurs différentes de `data`pour chaque couche. Ici, notre ligne lisse affiche juste un sous-ensemble de l'ensemble de données `mpg`, les voitures sous-compactes. L’argument de données locales dans `geom_smooth()`remplace l’argument de données globales `ggplot()` *pour cette couche uniquement*.
+
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy, show.legend = TRUE)) + 
+  geom_point(mapping = aes(color = class)) + 
+  geom_smooth(data = filter(mpg, class == "subcompact"),  se = FALSE)
+```
+
+### Exercices
+
+Exercice 1
+
+```{r}
+ggplot(data = mpg, aes(x = displ, y = hwy)) +
+         geom_point(size = 5) +
+         geom_smooth(se = FALSE)
+```
+
+Exercice 2
+
+```{r}
+ggplot(data = mpg, aes(x = displ, y = hwy, group = drv)) +
+         geom_point(size = 5) +
+         geom_smooth(size = 2, se = FALSE)
+```
+
+Exercice 3
+
+```{r}
+ggplot(data = mpg, aes(x = displ, y = hwy, group = drv, color = drv)) +
+         geom_point() +
+         geom_smooth(se = FALSE)
+```
+
+Exercice 4
+
+```{r}
+ggplot(data = mpg) +
+         geom_point(aes(x = displ, y = hwy, color = drv)) +
+         geom_smooth(aes(x = displ, y = hwy), se = FALSE)
+```
+
+Exercice 5
+
+```{r}
+ggplot(data = mpg, aes(x = displ, y = hwy, group = drv)) +
+         geom_point(aes(color = drv), size = 4) +
+         geom_smooth(aes(linetype = drv), se = FALSE)
+```
+
+Exercice 6
+
+```{r}
+ggplot(data = mpg, aes(x = displ, y = hwy, fill = drv)) +
+         geom_point(stroke = 2, size = 4, shape = 21, color = "grey")
+```
+
+# La clarté des diamants
+
+Poursuite de la découverte de ggplot2 mais avec une autre base de données intégrée dans tidyverse et qui se nomme `diamonds`. Cette base de données comprend un nombre conséquent (53 940) de diamants avec notamment leur taille, prix, qualité et poids.
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut))
+```
+
+D'emblé nous pouvons remarquer qu'une grande majorité des diamants répertoriés dans la base sont de très bonne qualité.
+
+## Les transformations statistiques
+
+Chaque geom est attaché à une transformation statistique et vice-versa. Dans certain cas il est possible de changer la transformation statistique d'un geom mais nous verrons cela plus tard. Dans le cas de `geom_bar`, il lui est rattaché par défaut `stat_count`. Comme geom = stat, ils sont interchangeable dans le bloc de code. Dans l'exemple ci-après nous obtenons les mêmes barres que précédemment.
+
+```{r}
+ggplot(data = diamonds) +
+  stat_count(mapping = aes(x = cut))
+```
+
+Nous pourrions faire un changement de transformation statistique, `geom_bar` accepte aussi `stat identity`. Seulement stat identity doit contenir la hauteur des barres hors je ne vais pas le calculer ou le reprendre manuellement ici.\
+Mais nous pouvons facilement faire un graphique à barres dont la hauteur des barres représente la proportion de l'élément dans diamonds.
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, y = stat(prop), group = 1))
+```
+
+Puisqu'il s'agit d'une proportion, la somme des hauteurs de tous les éléments est égale à 1.
+
+## Représentation graphique résumée (pour des valeurs x uniques)
+
+Nous allons faire une visualisation de la profondeur (*depth*) des diamands en fonction de leur qualité de coupe (*cut*), en précisant la profondeur minimum, maximum, l'écart entre le mini et la maxi et enfin le point médian (*et oui tout ça dans un seul graphe !*).\
+- Nous n'allons pas utiliser un geom mais la `stat_summary`.\
+- Les paramètres prévus pour les min et max sont `fun.min =`et `fun.max =`.\
+- Le paramètre pour avoir le point médian est `fun =`.
+
+```{r}
+ggplot(data = diamonds) + 
+  stat_summary(
+    mapping = aes(x = cut, y = depth),
+    fun.min = min,
+    fun.max = max,
+    fun = median
+  )
+```
+
+ggplot2 fournit plus de 20 statistiques à utiliser, pour les retrouver il faut utiliser l'aide de ggplot2...
+
+**Petit exercice**
+
+Refaire le même graphique avec le geom associer à stat_summary (*le mieux associés, ils sont plusieurs*).
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_pointrange(
+    mapping = aes(x = cut, y = depth),
+    ymin = min,
+```
+
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut, y = after_stat(prop), group = depth, fill = depth))
+```
+
+# Ajuster la position
+
+Concernant les graphiques à barres, la couleur de l'aes peut-être `color`ou `fill`. Le graphique précédent peut ainsi est recoloré comme suit.
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, colour = cut))
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = cut))
+```
+
+Les qualités de coupe des diamants sont beaucoup plus visibles. L'opération peut aussi s'effectuer sur une autre catégorie de variable qualitative (*mais pas quantitative*) d'observations qui n'est ni x ni y.\
+C'est pour cette limitation que dans le chapitre précédent nous avons utilisé `group` plutôt que `fill`.
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity))
+```
+
+Mais revenons en à `position`, nous pouvons vouloir un graphe où les couleurs ne sont pas empilées.\
+Trois options existent pour `position` : ***stack***, ***"identity"***, ***"dodge"*** ou ***"fill"***. La position stack est celle que nous avons vu car définie par défaut dans geom_bar, elle empile les valeurs dans chaque barre.
+
+## Position = "identity"
+
+`position = "identity"`placera chaque objet exactement là où il se situe dans le contexte du graphique. Ce n'est pas très utile pour les barres, car cela les chevauche. Pour voir ce chevauchement, nous devons soit rendre les barres légèrement transparentes en définissant alphaune petite valeur, soit complètement transparentes en définissant fill = NA.
+
+```{r}
+ggplot(data = diamonds, mapping = aes(x = cut, fill = clarity)) + 
+  geom_bar(alpha = 1/5, position = "identity")
+ggplot(data = diamonds, mapping = aes(x = cut, colour = clarity)) + 
+  geom_bar(fill = NA, position = "identity")
+```
+
+L'ajustement de la position de l'identité est plus utile pour les géométries 2D, comme les points, où il s'agit de la valeur par défaut.
+
+## Position = "fill"
+
+position = "fill"fonctionne comme l'empilage, mais donne à chaque ensemble de barres empilées la même hauteur. Cela facilite la comparaison des proportions entre les groupes.
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "fill")
+```
+
+## position = "dodge"
+
+position = "dodge"place les objets qui se chevauchent directement les uns à côté des autres. Cela facilite la comparaison des valeurs individuelles.
+
+```{r}
+ggplot(data = diamonds) + 
+  geom_bar(mapping = aes(x = cut, fill = clarity), position = "dodge")
+```
+
+## position = "jitter"
+
+Dans le cas de certains graph, comme ceux à points, il arrive souvent que le nombre de points affichés ne correspondent pas au nombre d'observations. Ceci est dû au fait qu'un arrondi est fait sur l'affichage amenant à la superpsition de certain des points. Pour permettre le visualisation de ces "points cachés", nos utilisons un bruit de positionnement aléatoire autour de leur coordonnée normale.
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy), position = "jitter")
+```
+
+L'amoncellement de points autour d'une position traduit une densité.
+
+# GEOM_BOXPLOT
+
+```{r}
+ggplot(data = diamonds) +
+  geom_boxplot(aes(x = cut, y = color))
+```
+
+# **Analyse exploratoire des données**
+
+Explorez la distribution de chacune des variables x, y et z dans diamonds.
+```{r}
+diamonds |>
+  filter(z>2 & z<10) |>
+  ggplot(mapping = aes(x = z)) +
+  geom_histogram(binwidth = 0.05)
+```
+## *Valeurs inhabituelles*
+
+Si des valeurs inhabituelles sont présentes dans les données, plusieurs options s'offrent à vous.  
+1. Ne garder que les valeurs qui nous semblent justes, mais c'est déconseillé car à force de filtrer nous pourrions arriver à un échantillon insuffisant.  
+2. Nous vous recommandons plutôt de remplacer les valeurs inhabituelles par des valeurs manquantes. Le moyen le plus simple de procéder consiste à utiliser `mutate()` pour remplacer la variable par une copie modifiée. Vous pouvez utiliser la fonction `if_else()`pour remplacer les valeurs inhabituelles par `NA`.
+```{r}
+diamonds2 <- diamonds |> 
+  mutate(y = if_else(y < 3 | y > 20, NA, y))
+```
+Ainsi ggplot2 n'icluera pas les `NA` dans le tracé, mais il avertira qu'elles ont été supprimées à moins que vous n'utilisiez l'argument `na.rm = TRUE`.
+```{r}
+ggplot(diamonds2, aes(x = x, y = y, color = carat)) + 
+  geom_point(na.rm = TRUE)
+```
+```{r}
+ggplot(diamonds2, aes(x = x, y = z, color = carat)) + 
+  geom_point(na.rm = TRUE)
+```
+```{r}
+ggplot(diamonds2, aes(x = y, y = z, color = carat)) + 
+  geom_point(na.rm = TRUE)
+```
+
+D'autres fois, vous souhaitez comprendre ce qui différencie les observations avec des valeurs manquantes des observations avec des valeurs enregistrées. Par exemple, dans `nycflights13::flights1`, les valeurs manquantes dans la `dep_timevariable` indiquent que le vol a été annulé. Vous souhaiterez peut-être comparer les heures de départ prévues pour les heures annulées et non annulées. Vous pouvez le faire en créant une nouvelle variable, en utilisant `is.na()` pour vérifier si `dep_time` est manquant.
+```{r}
+nycflights13::flights |> 
+  mutate(
+    cancelled = is.na(dep_time),
+    sched_hour = sched_dep_time %/% 100,
+    sched_min = sched_dep_time %% 100,
+    sched_dep_time = sched_hour + (sched_min / 60)
+  ) |> 
+  ggplot(aes(x = sched_dep_time)) + 
+  geom_freqpoly(aes(color = cancelled), binwidth = 1/4) +
+  facet_wrap(~ cancelled, scales = "free")
+```
+## *Covariation*
+
+La covariation est la tendance des valeurs de 2 variables ou plus à varier ensemble.
+
+### Une variable catégorielle et une variable numérique
+
+Je sais ce qu'est une variable catégorielle et une variable numérique (discrète ou ? continue peut-être).
+Dans le livre R4DS je vois le premier exemple suivant :
+```{r}
+ggplot(diamonds, aes(x = price)) + 
+  geom_freqpoly(aes(color = cut), binwidth = 500, linewidth = 0.75)
+```
+En terme de programmation, je comprends le ggplot, mais qu'est-ce que geom_freqpoly ?  
+Sur le graphe, je crois voir une prédominance des diamants avec cut ideal. J'ai l'impression qu'ils prédominent tout au long du graphe et qu'ils sont très présent dans les premiers prix. Mais le livre dit qu'on ne voit pas grand chose... Et donne une variation de ce graphe basée sur la densité. Mais qu'est-ce que la densité ?  
+Dixit un site amateur certainement plus mis à jour (source http://www.jybaudot.fr/Probas/densite.html) la densité est utile pour représenter des variables continues. L'exemple donné se base sur la taille des gens, en considérant que de mesurer **exactement** 1750 mm est quasi nul et qu'il est plus facile de considérer les personnes dont la taille est située dans une fourchette de taille. On peut plus facilement étudié les personnes mesurant entre 160 cm et 180 cm.  
+Ramené à la densité, la somme des échantillon est toujours égale à 1. Si les valeurs sont discrètes elle peuvent être représentées sous forme de barres, si elles sont continuent, elles sont représentées par une infinité de micro barres formant l'apparence d'une ligne continue. C'est l'aire sous la ligne qui représente une aire de surface égale à 1.  
+Enfin, si nous calculons l'aire correspondant à l'intervalle de personnes mesurant entre 160 cm et 180 cm, nous obtenons une probabilité lorsque cette aire est rapporté à l'ensemble de la population (donc rapporté à 1).
+Je vais voir le nouveau graphe.
+```{r}
+ggplot(diamonds, aes(x = price, y = after_stat(density))) + 
+  geom_freqpoly(aes(color = cut), binwidth = 500, linewidth = 0.75)
+# after_stat, le after c'est pour dire de d'abord calculer la densité avant
+# de l'afficher en y
+```
+Je remarque que les valeurs de y ne sont plus les mêmes. J'ai du mal à croire que la somme de tout ça fait 1, mais bon il y a quand même beaucoup de valeurs, répartie sur plusiers qualité de coupe de diamant, alors je l'admets. Mais j'y vois pas plus clair ! Ah si, on peut dire que les diamants de coupe médiocre (fair) sont caremment plus chères que les autres dans une gamme de prix vers les 2 500... C'est du vol !  
+Dans l'exercice ils font la même observation que moi mais disent aussi que les choses ne sont pas aussi simple et propose de faire une visualisation en boite à moustache.
+```{r}
+ggplot(diamonds, aes(x = cut, y = price)) +
+  geom_boxplot()
+```
+Alors, là j'ai l'impression que les médian de toutes les qualitées de coupe sont toujours vers les 2 500, mais quand même les diamants ideal sont plutôt pas cher. Du coup c'est quand même bien ce que je pensais !  
+Le livre indique ensuite que les qualité de coupe, qui sont une variable catégorielle, sont étonnament ordonnés. C'est vrai que ça m'étonne et je m'attendais à ce que les catégories de coupe soit comparés dans le graphe dans un ordre croissant de valeur médianne. Mais en même temps le contraire m'étonne pas. L'explication donnée est que les catégories de coupes sont factorisée (??). Pour l'expliquer, le livre repart sur les données des voitures, avec l'exemple suivant :
+```{r}
+ggplot(mpg, aes(x = class, y = hwy)) +
+  geom_boxplot()
+```
+Les catégories de véhicules sont certainement aussi factorisées, des plus petits gabaries au plus grands.  
+La fonction pour surpasser ça serait `fct_reorder()`.
+```{r}
+ggplot(mpg, aes(x = fct_reorder(class, hwy, median), y = hwy)) +
+  geom_boxplot()
+```
+La différence saute aux yeux et c'est bien la médianne qui dirige la distribution du graphique. Comment fonctionne `fct_reorder()` ?  
+Dans l'exemple il est écrit `fct_reorder(class, hwy, median)`. Cela donne l'impression de dire : réordonne la classe de véhicule en fonction du hwy median.  
+Après cela vient une observation pertinente avec une solution décocertante. Que faire si le nom des catégories est trop long ? Tourner les noms à 90°. Je m'étais déjà demandé comment faire ça, mais la réponse ! Non ils tournent pas le nom, ils l'affichent sur les y, en faisant une permutation des axes ! Décevant.
+```{r}
+ggplot(mpg, aes(x = hwy, y = fct_reorder(class, hwy, median))) +
+  geom_boxplot()
+```
+En plus il me semble qu'il y a une fonction pour faire ça aussi mais je ne me souviens plus de laquelle (retrouvé quelques lignes plus loin dans le cour, c'est **coord_flip()**). Et ça doit moins bien marcher quand c'est pas des boites à moustachees ou pas des graphiques à barres de valeurs discrètes.
+
+#### Exercices
+
+1. Améliorer l'affichage des heures de départ des avions annulés et non annulés.
+```{r}
+nycflights13::flights |> 
+  mutate(
+    cancelled = is.na(dep_time),
+    sched_hour = sched_dep_time %/% 100,
+    sched_min = sched_dep_time %% 100,
+    sched_dep_time = sched_hour + (sched_min / 60)
+  ) |> 
+  ggplot(aes(x = sched_dep_time, y = after_stat(density))) + 
+  geom_freqpoly(aes(color = cancelled), binwidth = 1/4)
+```
+Pas sûr de ce que je vois. Peut être y a t'il moins de chance d'annulation entre 7 heures et 9 heures et moins autour de 20 heures mais c'est pas très précis sur les heures.
+
+2. Qu'est-ce qui fait le prix d'un diamant ?
+```{r}
+diamonds |>
+  ggplot(aes(x = depth, y = price, color = color)) +
+  geom_point(position = "jitter", size = 1) +
+  facet_grid(~cut)
+```
+J'ai l'impression que ce qui détermine le prix d'un diamant est la combinaison de son poids et de la qualité de sa coupe. La suite de l'exercide demande de coréler le prix à la coupe.
+```{r}
+diamonds |>
+  ggplot(aes(x = cut, y = price)) +
+  geom_freqpoly()
+```
+Là je sèche.
+
+3. Ils demandent un boxplot vertical (mais de quelle valeurs ?) et de faire un coord_flip. Ensuite ils demandent comment se comporte le coord_flip à l'échange de variable x avec y.
+```{r}
+diamonds |>
+  ggplot(aes(x = price, y = cut)) +
+  geom_boxplot()
+diamonds |>
+  ggplot(aes(x = price, y = cut)) +
+  geom_boxplot() +
+  coord_flip()
+```
+Je ne sais que trop dire sur l'échange de variable. Les boites à moustaches sont plus larges dans un cas que dans l'autre ? On voit mieux les différences de point médian ? Ou juste c'est exactement la même chose ?
+
+4. On nous dit que les boites à chat ne sont pas top car depuis leur création, les ensemble de données sont devenues de plus en plus grand, avec de plus en plus de valeurs abhérantes. On nous invite ensuite à installer le package lvplot et à l'utiliser (avec geom_lv). Apparemment ça nivelle les boite à moustaches.
+```{r}
+diamonds |>
+  ggplot(aes(x = price, y = cut)) +
+  geom_lv()
+```
+?? Je vois rien ! A si des petits (très petis) traits gris clair...
+```{r}
+diamonds |>
+  ggplot(aes(x = price, y = cut)) +
+  geom_lv(fill = "black") +
+  coord_flip()
+```
+Des points vraiment petits qui semblent indiquer que les diamants les plus cher sont plutôt de la catégorie "Very Good" et "Premium".
+
+5. Hein ! Qu'est-ce qui dit ? Je recopie l'exercice parce que là c'est complexe.  
+Créez une visualisation des prix des diamants par rapport à une variable catégorielle de diamonds (*quelle variable catégorielle ?*) en utilisant geom_violin() (*je connias pas celui là*), puis une facette geom_histogram() (*on peut faire une facette geom ?*), puis une colorée geom_freqpoly() (*une fecette coloré ou une facette de la variable couleur ?*), puis une colorée geom_density(). Comparez et contrastez les quatre parcelles. Quels sont les avantages et les inconvénients de chaque méthode de visualisation de la distribution d'une variable numérique en fonction des niveaux d'une variable catégorielle ?
+
+D'abord c'est quoi geom_violin ?
+***Traduction***
+Un graphe en violon est un affichage compact d'une distribution continue. C'est un mélange de geom_boxplot() et geom_density() : un tracé en violon est un tracé de densité en miroir affiché de la même manière qu'un boxplot.  
+Là je suis pas très avancé. Un tracé de densité en mirroir comme une boite à moustaches ? Mais bien sûr.
+```{r}
+diamonds |>
+  ggplot(aes(x = cut, y = price)) +
+  geom_violin() +
+```
+```{r}
+diamonds |>
+  ggplot(aes(x = price)) +
+  geom_histogram() +
+  facet_grid(~color)
+```
+```{r}
+diamonds |>
+  ggplot(aes(x = price, color = cut)) +
+  geom_freqpoly() +
+  facet_grid(~cut)
+```
+```{r}
+diamonds |>
+  ggplot(aes(x = price, color = cut)) +
+  geom_density(show.legend = FALSE) +
+  facet_grid(~cut)
+```
+
+### Deux variables catégorielles
+
+Pour visualiser la covariation entre les variables catégorielles, vous devrez compter le nombre d'observations pour chaque combinaison de niveaux de ces variables catégorielles. Une façon d'y parvenir est de s'appuyer sur le module intégré `geom_count()`.
+```{r}
+ggplot(diamonds, aes(x = cut, y = color)) +
+  geom_count()
+```
+Beaucoup d'idéal de couleur G.
+```{r}
+ggplot(diamonds, aes(x = cut, y = clarity)) +
+  geom_count()
+```
+Un maximum d'idéal de clarité VS2.
+```{r}
+ggplot(diamonds, aes(x = color, y = clarity)) +
+  geom_count()
+```
+Une autre approche pour explorer la relation entre ces variables consiste à calculer les décomptes.
+```{r}
+diamonds |>
+  count(clarity, color)
+```
+Puis de visualiser le résultat avec `geom_tile`.
+```{r}
+diamonds |>
+  count(clarity, color) |>
+  ggplot(aes(x = fct_reorder(clarity, n), y = fct_reorder(color, n))) +
+  geom_tile(aes(fill = n))
+```
+```{r}
+diamonds |>
+  ggplot(aes(x = cut, color = cut, fill = color)) +
+  geom_bar()
+```
+```{r}
+tmp <- diamonds |>
+  group_by(cut) |>
+  count(color)
+View(tmp)
+```
+
+### Deux variables numériques
+
+La méthode geom_point permet de voir si une relation existe entre deux variables numériques, mais devient difficile à lire sur des grands ensemble de données. Les points se superposent alors et le graphe n'est pas clair. Comment y remédier ?
+Pour les entrainements suivants, je ne considère que les diamants de moins de 3 carats.
+```{r}
+smaller <- filter(diamonds, carat < 3)
+```
+```{r}
+ggplot(smaller, aes(x = carat, y = price)) +
+  geom_point()
+```
+J'ai un bel exemple d'empillement de points. On voit quand même une relation exponentielle entre les carats et le prix des diamants. Je vais jouer sur la transparence des points.
+```{r}
+ggplot(smaller, aes(x = carat, y = price)) +
+  geom_point(alpha = 1/100)
+```
+Forte concentration sur les diamants légers à prix réduit.
+Dans le livre, il est dit que geom_histogram et geom_polyfreq servent à regrouper en une seule dimension (?).  
+Pour **regrouper en 2 dimensions** il faut apparemment utiliser geom_bin2d et geom_hex (hexadecimale ?).  
+geom_hex se trouve dans le package **hexbin** *install.packages("hexbin")*.  
+Voyons à quoi cela ressemble parce que les explications du livre ne me parle pas, il est question de rectangle, d'hexagone et de 2 couleurs.
+```{r}
+ggplot(smaller, aes(x = carat, y = price)) +
+  geom_bin2d()
+```
+Ca fait penser à geom_tile mais avec... différent. Deuxième exemple avec cette fois geom_hex.
+```{r}
+ggplot(smaller, aes(x = carat, y = price)) +
+  geom_hex()
+```
+Euh... d'accord c'est juste des hexagones au lieu de rectangles sinon c'est pareil ! Juste une question d'estétique ?  
+Alors après cela devient ***très*** technique. L'auteur (dont je ne me souviens plus le nom mais qui a créé le language R, surdiplômé et qui est de Nouvelle Zéelande) propose d'utiliser une valeur discrète un peu comme une valeur catégorielle (je me demande si ce mot "catégorielle" existe en français) avec l'exemple suivant :  
+```{r}
+ggplot(smaller, aes(x = carat, y = price)) + 
+  geom_boxplot(aes(group = cut_width(carat, 0.1)))
+```
+Que vois-je ? Beaucoup de boites à moustache, prix/carat, en regroupant les caract par tranches de 0.1 carat. Le ggplot est inchangé.  
+Le geom comprend un ase avec group = donc on regroupe, sur carat, interval 0.1 avec une fonction que je ne connaissait pas *`cut_width`*.
+L'auteur dit que les boites à moustaches se ressemblent beaucoup à l'exception des valeurs abérantes et propose de faire un découpage proportionnel en fonction du nombre de points avec l'argument varwidth = TRUE de cut_width. Essayons
+```{r}
+ggplot(smaller, aes(x = carat, y = price)) + 
+  geom_boxplot(aes(group = cut_width(carat, width = 0.1)))
+ggplot(smaller, aes(x = carat, y = price)) + 
+  geom_boxplot(aes(group = cut_width(carat, width = 0.1, varwidth = TRUE)))
+```
+Je ne vois strictement **aucune** différence !
+
+#### Exercices
+
+1. Au lieu de résumer la distribution conditionnelle avec un boxplot, vous pouvez utiliser un polygone de fréquence. Que devez-vous prendre en compte lorsque vous utilisez cut_width() vs. cut_number(). Quel impact cela a-t-il sur une visualisation de la distribution 2D de carat et price?
+Déjà je ne connais pas cut_number(), ça sort d'où ?  
+Simplement `cut_number()` divise l'axe des x en n groupes.  
+`cut_width` affiche des colonnes de largeur donnée.  
+Il existe aussi `cut_interval` qui a l'air de diviser en fonction d'un interval de quoi ? Mesure ou valeur ?  
+
+Donc voyons déjà le résultat avec un polygone de fréquence.
+```{r}
+ggplot(smaller, aes(x = carat)) +
+  geom_freqpoly(aes(group = cut_width(carat, width = 3)))
+```
+Je comprends pas ce que je vois, mais alors pas du tout.
+
+2. Visualisez la distribution de carat, partitionnée par price.
+```{r}
+ggplot(smaller, aes(x = price, y = carat)) +
+  geom_boxplot(aes(group = cut_width(x = price, width = 1000)))
+```
+
+### Patrons et modèles
+
+Il s'agit maintenant de modélisation. Je reprends l'explication du cours.  
+S'il existe une relation systématique entre deux variables, elle apparaîtra sous la forme d'un modèle dans les données. Si vous repérez une tendance, demandez-vous :  
+- Cette tendance pourrait-elle être due à une coïncidence (c'est-à-dire au hasard) ?  
+- Comment pouvez-vous décrire la relation impliquée par le modèle ?  
+- Quelle est la force de la relation impliquée par le modèle ?  
+- Quelles autres variables pourraient affecter la relation ?  
+- La relation change-t-elle si vous examinez des sous-groupes individuels de données ?
+
+Les modèles présents dans vos données fournissent des indices sur les relations, c'est-à-dire qu'ils révèlent une covariation. Si vous considérez la variation comme un phénomène qui crée de l’incertitude, la covariation est un phénomène qui la réduit. Si deux variables covarient, vous pouvez utiliser les valeurs d'une variable pour faire de meilleures prédictions sur les valeurs de la seconde. Si la covariation est due à une relation causale (un cas particulier), alors vous pouvez utiliser la valeur d'une variable pour contrôler la valeur de la seconde.
+
+Les modèles sont un outil permettant d'extraire des modèles à partir de données. Par exemple, considérons les données sur les diamants. Il est difficile de comprendre la relation entre la taille et le prix, car la taille et le carat, ainsi que le carat et le prix, sont étroitement liés. Il est possible d'utiliser un modèle pour supprimer la relation très forte entre le prix et le carat afin d'explorer les subtilités qui subsistent. Le code suivant correspond à un modèle qui prédit *price* et *carat* calcule ensuite les résidus (la différence entre la valeur prédite et la valeur réelle). Les résidus nous donnent une idée du prix du diamant, une fois l'effet du carat supprimé. Notez qu'au lieu d'utiliser les valeurs brutes de *price* et *carat*, nous les transformons d'abord et ajustons un modèle aux valeurs transformées en log. Ensuite, nous exponentions les résidus pour les remettre dans l'échelle des prix du brut.
+```{r}
+library(tidymodels)
+
+diamonds <- diamonds |>
+  mutate(
+    log_price = log(price),
+    log_carat = log(carat)
+  )
+
+diamonds_fit <- linear_reg() |>
+  fit(log_price ~ log_carat, data = diamonds)
+
+diamonds_aug <- augment(diamonds_fit, new_data = diamonds) |>
+  mutate(.resid = exp(.resid))
+
+ggplot(diamonds_aug, aes(x = carat, y = .resid)) + 
+  geom_point()
+```
+Une fois que vous avez supprimé la relation étroite entre le carat et le prix, vous pouvez voir ce que vous attendez en matière de relation entre la taille et le prix : par rapport à leur taille, les diamants de meilleure qualité sont plus chers.
+```{r}
+ggplot(diamonds_aug, aes(x = cut, y = .resid)) + 
+  geom_boxplot()
+```
+L'auteur s'arrête là pour les modèles. Pas plus d'explications.
+
+# Communication
+
+Prérequis
+```{r}
+library(tidyverse)
+library(scales)
+library(ggrepel)
+library(patchwork)
+```
+
+## Les étiquettes (labels)
+
+Un bon début est de mettre des labels clairs et explicites.
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(aes(color = class)) +
+  geom_smooth(se = FALSE) +
+  labs(
+    x = "Engine displacement (L)",
+    y = "Highway fuel economy (mpg)",
+    color = "Car type",
+    title = "Fuel efficiency generally decreases with engine size",
+    subtitle = "Two seaters (sports cars) are an exception because of their light weight",
+    caption = "Data from fueleconomy.gov"
+  )
+```
+Il est possible d'utiliser des équations mathématiques au lieu de chaînes de texte. ""Déconnectez-vous simplement quote() et découvrez les options disponibles dans ?plotmath :
+```{r}
+df <- tibble(
+  x = 1:10,
+  y = cumsum(x^2)
+)
+
+ggplot(df, aes(x, y)) +
+  geom_point() +
+  labs(
+    x = quote(x[i]),
+    y = quote(sum(x[i] ^ 2, i == 1, n))
+  )
+```
+## Exercices
+
+Faire une graphe sur l'économie de carburant
+```{r}
+ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_point() +
+  labs(
+    x = "Cylindrée (L)",
+    y = "Autonomie (mpg",
+    title = "Autonomie des véhicules en fonction de leur cylindrée",
+    subtitle = "Une cylindrée plus importante entraine une autonomie plus faible",
+    caption = "Source : fueleconomy.gov"
+  )
+```
+
+## Annotations
+
+```{r}
+label_info <- mpg |>
+  group_by(drv) |>
+  arrange(desc(displ)) |>
+  slice_head(n = 1) |>
+  mutate(
+    drive_type = case_when(
+      drv == "f" ~ "front-wheel drive",
+      drv == "r" ~ "rear-wheel drive",
+      drv == "4" ~ "4-wheel drive"
+    )
+  ) |>
+  select(displ, hwy, drv, drive_type)
+
+label_info
+```
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  geom_text(
+    data = label_info, 
+    aes(x = displ, y = hwy, label = drive_type),
+    fontface = "bold", size = 5, hjust = "right", vjust = "bottom"
+  ) +
+  theme(legend.position = "none")
+#> `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+ggplot(mpg, aes(x = displ, y = hwy, color = drv)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(se = FALSE) +
+  geom_label_repel(
+    data = label_info, 
+    aes(x = displ, y = hwy, label = drive_type),
+    fontface = "bold", size = 5, nudge_y = 2
+  ) +
+  theme(legend.position = "none")
+#> `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+potential_outliers <- mpg |>
+  filter(hwy > 40 | (hwy > 20 & displ > 5))
+  
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_text_repel(data = potential_outliers, aes(label = model)) +
+  geom_point(data = potential_outliers, color = "red") +
+  geom_point(
+    data = potential_outliers,
+    color = "red", size = 3, shape = "circle open"
+  )
+```
+N'oubliez pas qu'en plus de geom_text()et geom_label(), vous disposez de nombreuses autres géométries dans ggplot2 pour vous aider à annoter votre tracé. Quelques idées :
+
+Utilisez geom_hline()et geom_vline()pour ajouter des lignes de référence. Nous les rendons souvent épais ( linewidth = 2) et blancs ( color = white) et les dessinons sous la couche de données principale. Cela les rend faciles à voir, sans détourner l’attention des données.
+
+Utilisez geom_rect()pour dessiner un rectangle autour des points d’intérêt. Les limites du rectangle sont définies par l'esthétique xmin, xmax, ymin, ymax. Vous pouvez également consulter le package ggforce , en particulier geom_mark_hull(), qui vous permet d'annoter des sous-ensembles de points avec des coques.
+
+À utiliser geom_segment()avec l' arrowargument pour attirer l'attention sur un point avec une flèche. Utilisez l'esthétique xet ypour définir l'emplacement de départ, et xendpour yenddéfinir l'emplacement final.
+
+Une autre fonction pratique pour ajouter des annotations aux tracés est annotate(). En règle générale, les géoms sont généralement utiles pour mettre en évidence un sous-ensemble de données, tout en annotate()étant utiles pour ajouter un ou plusieurs éléments d'annotation à un tracé.
+
+Pour démontrer l'utilisation de annotate(), créons du texte à ajouter à notre intrigue. Le texte est un peu long, nous allons donc stringr::str_wrap()y ajouter automatiquement des sauts de ligne en fonction du nombre de caractères souhaités par ligne :
+```{r}
+trend_text <- "Larger engine sizes tend to have lower fuel economy." |>
+  str_wrap(width = 30)
+trend_text
+#> [1] "Larger engine sizes tend to\nhave lower fuel economy."
+```
+Ensuite, nous ajoutons deux couches d'annotation : une avec une géométrie d'étiquette et l'autre avec une géométrie de segment. L' esthétique xet ydans les deux définissent l'endroit où l'annotation doit commencer, et l' esthétique xendet yenddans l'annotation de segment définissent l'emplacement de fin du segment. Notez également que le segment est représenté par une flèche.
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  annotate(
+    geom = "label", x = 3.5, y = 38,
+    label = trend_text,
+    hjust = "left", color = "red"
+  ) +
+  annotate(
+    geom = "segment",
+    x = 3, y = 35, xend = 5, yend = 25, color = "red",
+    arrow = arrow(type = "closed")
+  )
+```
+L'annotation est un outil puissant pour communiquer les principaux points à retenir et les fonctionnalités intéressantes de vos visualisations. La seule limite est votre imagination (et votre patience pour positionner les annotations de manière esthétique) !
+
+# **INTERUPTION CHAPITRE 11**

@@ -1,0 +1,78 @@
+---
+title: "R - Styles"
+author: "Losclair57"
+format: html
+editor: visual
+---
+
+# Le ***style*** de programmation
+
+L'utilisation d'un style cohérent permet aux autres de lire plus facilement votre travail et est particulièrement importante si vous avez besoin de l'aide de quelqu'un d'autre. Ce chapitre présentera les points les plus importants du guide de style Tidyverse.\
+Il existe d'excellents outils pour restyler rapidement le code existant, comme le package styler de Lorenz Walthert. Une fois que vous l'avez installé avec `install.packages("styler")`, un moyen simple de l'utiliser consiste à utiliser la palette de commandes de RStudio. La palette de commandes vous permet d'utiliser n'importe quelle commande RStudio intégrée et de nombreux compléments fournis par les packages. Ouvrez la palette en appuyant sur Ctrl + Shift + P, puis tapez « styler ».
+
+```{r}
+install.packages("styler")
+```
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+## **Formatage des noms**
+
+Par convention en R nous utiliserons la nomination snake_case qui consiste a utiliser des lettres minuscules et éventuellement des chiffres séparées par des underscore.\
+Il est préférable de préférer des noms longs, descriptifs et faciles à comprendre plutôt que des noms concis et rapides à saisir.\
+En général, si vous avez un ensemble de variables qui constituent une variation sur un thème, il est préférable de leur donner un préfixe commun plutôt qu'un suffixe commun, car la saisie semi-automatique fonctionne mieux au début d'une variable.
+
+## **Les espaces**
+
+Placez des espaces de chaque côté des opérateurs mathématiques à part \^(c'est-à-dire +, -, ==, \<, …) et autour de l'opérateur d'affectation (\<-).\
+Ne mettez pas d'espaces à l'intérieur ou à l'extérieur des parenthèses pour les appels de fonction réguliers. Mettez toujours un espace après une virgule, comme en anglais standard. Vous pouvez ajouter des espaces supplémentaires si cela améliore l'alignement. Par exemple, si vous créez plusieurs variables dans `mutate()`, vous souhaiterez peut-être ajouter des espaces pour que toutes soient alignées. Cela facilite la lecture du code.
+
+```         
+flights |> 
+  mutate(
+    speed      = distance / air_time,
+    dep_hour   = dep_time %/% 100,
+    dep_minute = dep_time %%  100
+```
+
+## **Les pipes**
+
+`|>`doit toujours être précédé d'un espace et doit généralement être la dernière chose sur une ligne. Si la fonction que vous utilisez a des arguments nommés (comme `mutate()` ou `summarize()`), placez chaque argument sur une nouvelle ligne. Après la première étape du pipeline, indentez chaque ligne de deux espaces. RStudio placera automatiquement les espaces pour vous après un saut de ligne suivant un `|>`. Si vous placez chaque argument sur sa propre ligne, indentez de deux espaces supplémentaires. Enfin, méfiez-vous des lignes très longues, disons plus de 10 à 15 lignes. Essayez de les diviser en sous-tâches plus petites, en donnant à chaque tâche un nom informatif.
+
+```         
+flights |>  
+  group_by(tailnum) |> 
+  summarize(
+    delay = mean(arr_delay, na.rm = TRUE),
+    n = n()
+  )
+```
+
+## **ggplot2**
+
+Les mêmes règles de base qui s'appliquent au tube s'appliquent également à ggplot2, traitez simplement le `+` de la même manière que `|>`. Surveillez la transition de `|>` à `+`. Nous souhaiterions que cette transition ne soit pas nécessaire, mais malheureusement, ggplot2 a été écrit avant la découverte du pipe.
+
+```         
+flights |> 
+  group_by(dest) |> 
+  summarize(
+    distance = mean(distance),
+    speed = mean(distance / air_time, na.rm = TRUE)
+  ) |> 
+  ggplot(aes(x = distance, y = speed)) +
+  geom_smooth(
+    method = "loess",
+    span = 0.5,
+    se = FALSE, 
+    color = "white", 
+    linewidth = 4
+  ) +
+  geom_point()
+```
+
+## **Les sections**
+
+RStudio Les affichera dans la liste déroulante de navigation du code en bas à gauche de l'éditeur.
