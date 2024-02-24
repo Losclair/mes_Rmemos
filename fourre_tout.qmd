@@ -1,21 +1,461 @@
 ---
-title: "fourre_tout"
+title: "R4DS study"
 format: html
 editor: visual
 ---
 
-# **FOURRE TOUT**
+# **R4DS**
+
+## **INTRODUCTION**
+
+L'ensemble des fichiers contenu dans ce projet sont issus du livre R pour la data science disponible sur le site : <https://r4ds.hadley.nz/>
+
+Le livre est (pour l'instant) entièrement gratuit et au moment ou j'écris ces lignes, il existe en première et deuxième édition. Si vous êtes un curieux qui passe par là, ne vous étonnez pas du ton que j'employerai car j'écris surtout pour moi-même. Evidemment le repo est en public c'est juste que je n'ai rien à cacher. Enfin, il se peut qu'il y ai un mélange entre la première et la deuxième version dans ce que je reprends dans le présent quarto. Ah si j'oubliais, je synthétise beaucoup alors n'hésitez pas à voir le site du livre si vous ne comprenez pas ce que j'écris.
+
+Premier élément à retenir,\
+un projet typique d'analyse des données se compose **toujours** des étapes suivantes : - Importation des données\
+- Visualisation des données\
+- Transformation des données\
+- Modélisation des données - Communication des résultats
+
+A noter que les phases de visualisation/transformation/ modélisation des données sont souvent reproduites plusieurs fois dans une étude jusqu'à obtention des résultats utiles.
+
+## **LIBRAIRIES NECESSAIRES**
 
 ```{r}
 library(nycflights13)
 library(tidyverse)
+library(lvplot)
+library(palmerpenguins)
+library(ggthemes)
 ```
+
+## **LA VISUALISATION**
+
+Le meilleur outil est `ggplot2` et nous allons apprendre à l'utiliser. Nos premières données viennent de palmerpenguins, des données receuillies sur une population de manchots. Les questions vont tourner principalement sur le fait de savoir s'il y a une relation entre la longueur de leur nageoire et leur poids, si la relation est positive ou négative, linéaire ou non, si cette éventuelle relation est la même selon l'espèce.
+
+Un ensemble de donnée devrait toujours être des observations (qui constituent les lignes) de variables (qui sonstituent les colonnes).\
+A l'intersection de l'observation et de la variable, nous trouvons une valeur qui peut être quantitative, qualitative, ou être une propriété.
+
+Les données sont regroupées dans un `tibbles`, chose que l'on ne connait pas encore mais il parait que c'est plus pratique.
+
+Voyons à quoi ressemble le "tibbles" des manchots.
+
+```{r}
+penguins
+```
+
+344 observations de 8 variables. Les variables sont : - L'espèce (species) - L'île (island) où ils ont été observés\
+- bill_length_mm\
+- bill_depth_mm\
+- La longueur de la nageoire d'un manchot (flipper_length_mm) en milimètres\
+- Le poids(body_mass_g) en grammes\
+- Le sexe (sex) du manchot\
+- year
+
+Pour en savoir plus nous pouvons utiliser la commande `?penguins`, mais je ne le ferais pas ici.\
+Le but de cette première visualisation est d'afficher un graphe en couleur du poids par rapport à la longueur de la nageoire, en distinguant les espèces.
+
+### *Créer une visualisation*
+
+La structure de base de la commande est : ggplot(data = dataframe) + geom\_..(mapping = aes(x = , y = )).\
+`ggplot` prépare le cadre (aussi appelé canevas) du tracé. `geom_...` effectue un calque d'un graphe en particulier et peut se cumuler avec un maximum de 5 autres calques. Commençons la première visualisation du poids par rapport à la longueur de la nageoire.
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point()
+```
+
+Déjà d'emblée on constate que plus la nageoire est longue, plus le manchot est lourd. On note aussi un message d'erreur indiquant qu'il manque 2 valeurs et que donc elles ne figurent pas sur le calque.
+
+Maintenant, le même calque mais en distiguant les différentes espèces par des couleurs.
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)
+) +
+  geom_point()
+```
+
+Et ajoutons une belle ligne pour bien voir la linéarité. Pour ce faire nous utilisons `geom_smooth` et le paramètre `method = "lm"` qui apparemment signifie linear method.
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = species)
+) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+Aïe, c'est quoi toutes ces lignes ! Nous préfèrerions une seule ligne pour l'ensemble des manchots. Comment faire ?
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point(aes(color = species)) +
+  geom_smooth(method = "lm")
+```
+
+En déplaçant le paramètre color dans l'aes de geom_smooth nous avons obtenu exactement ce que nous voulions (ce qui était demandé).\
+Maintenant le livre nous répond (enfin l'auteur, et certainement qu'il n'a pas complètement tort) que certain sont daltonnien, alors comment faire ?\
+Et bien en modifiant la forme des points.
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point(aes(color = species, shape = species)) +
+  geom_smooth(method = "lm")
+```
+
+Nous avons donc maitenant des couleurs **et** des formes différentes, en fonction de l'espèce.\
+Nous allons donc dixit le livre et la librairie `ggthemes` rendre tout cela perceptible, même pour une personne daltonienne.
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g) # Les données de base
+) +
+  geom_point(aes(color = species, shape = species)) + # Ca ont a vu
+  geom_smooth(method = "lm") +
+  labs(
+    title = "Poids des manchots et longueur de la nageoire",
+    subtitle = "Dimmensions pour Adelie, Chinstrap, et Gentoo manchots",
+    x = "Longueur de la nageoire en mm", y = "Poids en g",
+    color = "Espèce", shape = "Espèce"
+  ) +
+  scale_color_colorblind()
+```
+
+### *Exercices*
+
+1.  Combien y a-t-il de lignes penguins? Combien de colonnes ? J'ai déjà répondu à cette question. 344 observations de 8 variables, soit 344 lignes et 8 colonnes.
+
+2.  Que décrit la bill_depth_mm variable dans le penguinsbloc de données ? Lisez l'aide pour ?penguinsle savoir. La profondeur de l'aile ou de la nageoire.
+
+3.  Créez un nuage de points de bill_depth_mm vs. bill_length_mm. Autrement dit, créez un nuage de points bill_depth_mm sur l'axe des y et bill_length_mm sur l'axe des x. Décrivez la relation entre ces deux variables.
+
+```{r}
+ggplot(data = penguins, mapping = aes(x = bill_length_mm, y = bill_depth_mm)) +
+  geom_point(aes(color = species, shape = species)) +
+  geom_smooth() +
+  labs(
+    title = "Profondeur sur longueur des aillerons",
+    subtitle = "Dimmensions pour Adelie, Chinstrap, et Gentoo manchots",
+    x = "Longueur de l'ailleron en mm", y = "Epaisseur de l'ailleron en mm",
+    color = "Espèce", shape = "Espèce"
+  )
+```
+
+Pas de relation nette entre l'épaisseur et la longueur, les données restent éparpillées. On distingue des tendances en fonction des espèces. Peut-être quand même une tendance à moins d'épaisseur au fur et à mesure que les aillerons sont longs. En enlevant le parmaètre de la linear Method on voit que les Adelie se démarques par des ailerons plus épais et moins longs, des longeurs assez proches pour les deux autres espèces mais par contre de réelle différence d'épaisseur entre les Gentoo et les Chinstrap.
+
+4.  Que se passe-t-il si vous créez un nuage de points de species vs. bill_depth_mm. Quel pourrait être un meilleur choix de géomètre ?
+
+```{r}
+ggplot(data = penguins, mapping = aes(x = species, y = bill_depth_mm)) +
+  geom_point(aes(color = species, shape = species)) +
+  labs(
+    title = "Profondeur sur longueur des aillerons",
+    subtitle = "Dimmensions pour Adelie, Chinstrap, et Gentoo manchots",
+    x = "Longueur de l'ailleron en mm", y = "Espèce",
+    color = "Espèce", shape = "Espèce"
+  )
+```
+
+Avec cette étude on voit mieux la différence entre les Gentoo et les autres. Un geom en boite à moustache serait sûrement plus utile.
+
+```{r}
+ggplot(data = penguins, mapping = aes(x = species, y = bill_depth_mm)) +
+  geom_boxplot (aes(color = species), na.rm = TRUE) +
+  labs(
+    title = "Profondeur sur longueur des aillerons",
+    subtitle = "Dimmensions pour Adelie, Chinstrap, et Gentoo manchots",
+    x = "Longueur de l'ailleron en mm", y = "Espèce",
+    color = "Espèce", shape = "Espèce"
+  )
+```
+
+C'est encore plus visible. On remarque une donnée extrême chez les Adelie.
+
+```{r}
+ggplot(data = penguins,aes(y=fct_infreq(species))) + 
+  geom_bar(aes(fill=species)) +
+  labs(
+    title = "Répartition entre les espèces",
+    subtitle = "Certaines espèces sont plus nombreuses",
+    x = "Nombre d'individus",
+    y = "Espèce",
+    caption = "Les données proviennent du package palmerpenguins."
+  )
+```
+
+8.  Recreate the following visualization. What aesthetic should bill_depth_mm be mapped to? And should it be mapped at the global level or at the geom level?
+
+```{r}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color = bill_depth_mm), na.rm = TRUE) +
+  geom_smooth(na.rm = TRUE)
+```
+
+9.  Run this code in your head and predict what the output will look like. Then, run the code in R and check your predictions.
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g, color = island)
+) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+10. Will these two graphs look different? Why/why not?
+
+```{r}
+ggplot(
+  data = penguins,
+  mapping = aes(x = flipper_length_mm, y = body_mass_g)
+) +
+  geom_point() +
+  geom_smooth()
+
+ggplot() +
+  geom_point(
+    data = penguins,
+    mapping = aes(x = flipper_length_mm, y = body_mass_g)
+  ) +
+  geom_smooth(
+    data = penguins,
+    mapping = aes(x = flipper_length_mm, y = body_mass_g)
+  )
+```
+
+Intuitivement après tous ces exercices, on s'attendrait à voir 3 lignes de geom_smooth. Mais en y réfléchissant, vu qu'on étudie que le rapport masse / longeur de nageoire, pourquoi y aurait-il 3 lignes ? Parce qu'on s'attend à ce qu'il différencie les espèces de manchot, où leur île d'origine avec par exemple un `color =` mais ce n'est pas le cas...
+
+### *Visualisation des distributions*
+
+La façon dont vous visualisez la distribution d'une variable dépend du type de variable : catégorielle ou numérique.
+
+#### *Une variable catégorielle*
+
+Une variable est catégorique si elle ne peut prendre qu'une seule valeur parmi un petit ensemble de valeurs. Pour examiner la distribution d'une variable catégorielle, vous pouvez utiliser un graphique à barres. La hauteur des barres affiche le nombre d'observations effectuées avec chaque valeur.
+
+```{r}
+ggplot(penguins, aes(x = species)) +
+  geom_bar()
+```
+
+Il est souvent préférable de réorganiser les barres en fonction de leurs fréquences. Cela nécessite de transformer la variable en facteur (comment R gère les données catégorielles), puis de réorganiser les niveaux de ce facteur. Pour ce faire il y a `fct_infreq()`.
+
+```{r}
+ggplot(penguins, aes(x = fct_infreq(species))) +
+  geom_bar()
+```
+
+#### *Une variable numérique*
+
+Une variable est numérique (ou quantitative) si elle peut prendre une large gamme de valeurs numériques et qu'il est judicieux d'ajouter, de soustraire ou de faire des moyennes avec ces valeurs. Les variables numériques peuvent être continues ou discrètes.
+
+Une visualisation couramment utilisée pour les distributions de variables continues est un histogramme.
+
+```{r}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 20, na.rm = TRUE) +
+  labs(title = "Binwidth 20")
+
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 100, na.rm = TRUE) +
+  labs(title = "Binwidth 100")
+
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 200, na.rm = TRUE) +
+  labs(title = "Binwidth 200")
+
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 1000, na.rm = TRUE) +
+  labs(title = "Binwidth 1000")
+
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 2000, na.rm = TRUE) +
+  labs(title = "Binwidth 2000")
+
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_histogram(binwidth = 3000, na.rm = TRUE) +
+  labs(title = "Binwidth 3000")
+```
+
+La visualisation de variables numériques en histogramme est toujours sujette au "facteur de zoom". Ici le zoom est la largeur d'une colonne déterminée par le paramètre binwidth. Vous pouvez modifier ce paramètre et voir la différence. Apparemment je dirais que le meilleur est entre 100 et 200, pas vraiment 100 à cause des "creux" dans les maxima.
+
+Un résultat analogue peut être fait en ligne avec `geom_density`.
+
+```{r}
+ggplot(penguins, aes(x = body_mass_g)) +
+  geom_density(na.rm = TRUE)
+```
+
+L'échelle des y est un peu déroutante mais si je me souviens bien, le calcul de la densité est une fraction dont la somme (pour l'ensemble de la variable) est égale à 1.
+
+#### *Exercices*
+
+1.  Créez un tracé à barres de species, où vous attribuez species à l'y. En quoi ce graphe est-il différent ?
+
+```{r}
+ggplot(penguins, aes(y = species)) +
+  geom_bar()
+```
+
+Il est horizontal.
+
+2.  En quoi les deux graphes suivants sont-ils différents ? Quelle esthétique, color ou fill, est la plus utile pour changer la couleur des barres ?
+
+```{r}
+ggplot(penguins, aes(x = species)) +
+  geom_bar(color = "red")
+
+ggplot(penguins, aes(x = species)) +
+  geom_bar(fill = "red")
+```
+
+Concernant les geom à barres, color fait le pourtour et fill rempli l'intérieur des barres. Ce n'est pas le cas de geom_point quand les formes (shape) ne sont pas creuses et il existe peut-être (sûrement) d'autres exceptions.
+
+3.  À quoi sert l'argument `bins` du geom_histogram() ?\
+    C'est le nombre de barres, mais ignoré en présence de l'argument `binwidth`. La valeur par défaut de bins est 30.
+
+4.  Créez un histogramme de la variable carat dans l'ensemble de données `diamonds` disponible lorsque vous chargez le package Tidyverse. Expérimentez avec différentes largeurs de barre. Quelle largeur de barre révèle les modèles les plus intéressants ?
+
+```{r}
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(bins = 0.1) +
+  labs(title = "bins = 0.1")
+
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(bins = 1) +
+  labs(title = "bins = 1")
+
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(bins = 10) +
+  labs(title = "bins = 10")
+
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(bins = 15) +
+  labs(title = "bins = 15")
+
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(bins = 50) +
+  labs(title = "bins = 50")
+
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(bins = 100) +
+  labs(title = "bins = 100")
+```
+
+Un nombre de 10 bins semblent correct.
+
+```{r}
+ggplot(diamonds, aes(x = carat)) +
+  geom_histogram(binwidth = 0.25) +
+  geom_density(linewidth = 0.75) # S'affiche pas, peut-être parce que par la même échelle
+```
+
+### *Visualiser les relations*
+
+Pour visualiser une relation, nous devons avoir au moins deux variables mappées à l'esthétique d'une intrigue. Dans les sections suivantes, vous découvrirez les tracés couramment utilisés pour visualiser les relations entre deux ou plusieurs variables et les géométries utilisées pour les créer.
+
+#### *Une variable numérique et une variable catégorielle*
+
+Avec les boites à moustache `boxplot`. Le cadre va de 25 centil à 75 centil, affiche la médiane. Les moustaches font max 1,5 x IQR(la longueur de la boite). Les valeurs qui ne sont pas dans les moustaches sont probablements abhérantes.\
+Jetons un coup d'œil à la répartition de la masse corporelle par espèce en utilisant boxplot.
+
+```{r}
+ggplot(penguins, aes(x = species, y = body_mass_g)) +
+  geom_boxplot()
+```
+
+Il semble qu'il y a 2 valeurs abérantes dans les poids des Chinstrap.
+
+```{r}
+ggplot(penguins, aes(x = body_mass_g, color = species)) +
+  geom_density(linewidth = 0.75)
+```
+
+De plus, nous pouvons mapper speciesà la fois colorsur filll'esthétique et utiliser l' alphaesthétique pour ajouter de la transparence aux courbes de densité remplies. Cette esthétique prend des valeurs comprises entre 0 (complètement transparent) et 1 (complètement opaque). Dans le tracé suivant, il est défini sur 0,5.
+
+```{r}
+ggplot(penguins, aes(x = body_mass_g, color = species, fill = species)) +
+  geom_density(alpha = 0.5)
+```
+
+Notez la terminologie que nous avons utilisée ici :
+
+-   Nous mappons les variables à l'esthétique si nous voulons que l'attribut visuel représenté par cette esthétique varie en fonction des valeurs de cette variable.\
+-   Sinon, on fixe la valeur d'une esthétique.
+
+#### Deux variables catégorielles
+
+Nous allons voir la répartition des modèles de manchots par île, d'abord en nombre et ensuite en fréquence pour mieux voir le rapport.
+
+```{r}
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar()
+
+ggplot(penguins, aes(x = island, fill = species)) +
+  geom_bar(position = "fill")
+```
+
+J'en retiens qu'en terme de graphes à barres, il n'y a pas de `y` mais un `fill` pour le remplacer.
+
+#### Deux variables numériques
+
+Le nuage de point.
+
+#### Trois variables ou plus, les facettes
+
+Nous pouvons incorporer davantage de variables dans une intrigue en les mappant à des esthétiques supplémentaires. Par exemple, dans le nuage de points suivant, les couleurs des points représentent les espèces et les formes des points représentent les îles.
+
+```{r}
+ggplot(penguins, aes(x = flipper_length_mm, y = body_mass_g)) +
+  geom_point(aes(color= species, shape = island), na.rm = TRUE)
+```
+
+Mais c'est peu visible, surtout concernant les îles.
+
+On préférera les graphes en **facettes**.
+
+Pour diviser votre tracé en fonction d'**une seule variable catégorielle**, utilisez `facet_wrap()`.
+
+```{r}
+ggplot(penguins) +
+  geom_point(aes(x = flipper_length_mm, y = body_mass_g, color = species)) +
+  facet_wrap(~island)
+```
+
+#### Exercices
+
+```{r}
+ggplot(mpg, aes(x = displ, y = hwy, color = manufacturer, size = cyl)) +
+  geom_point()
+```
+
+```{r}
+ggplot(mpg, aes(x = displ,y = hwy)) +
+  geom_point() +
+  geom_smooth(linewidth = hwy)
+```
+
+# 
 
 # PACKAGE DPLYR ou la transformation de données
 
 ## Rows
 
-Les verbes les plus importants qui opèrent sur les lignes d'un ensemble de données sont `filter()`, qui modifie les lignes présentes sans changer leur ordre, et `arrange()`, qui modifie l'ordre des lignes sans changer celles qui sont présentes. Les deux fonctions n’affectent que les lignes et les colonnes restent inchangées. Nous discuterons également de `distinct()`qui trouve des lignes avec des valeurs uniques mais différentes ainsi que de `arrange()` et `filter()`qui peuvent éventuellement modifier les colonnes.
+Les verbes les plus importants qui opèrent sur les lignes d'un ensemble de données sont `filter()`, qui modifie les lignes présentes sans changer leur ordre, et `arrange()`, qui modifie l'ordre des lignes sans changer celles qui sont présentes. Les deux fonctions n'affectent que les lignes et les colonnes restent inchangées. Nous discuterons également de `distinct()`qui trouve des lignes avec des valeurs uniques mais différentes ainsi que de `arrange()` et `filter()`qui peuvent éventuellement modifier les colonnes.
 
 ### filter()
 
